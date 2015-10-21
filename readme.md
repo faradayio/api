@@ -21,6 +21,7 @@
   * [Record a lead](#record-a-lead)
   * [Record a prospect](#record-a-prospect)
   * [List household attributes](#list-household-attributes)
+  * [List products](#list-products)
 
 ## Overview
 
@@ -152,6 +153,7 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 * [Record a lead](#record-a-lead)
 * [Record a prospect](#record-a-prospect)
 * [List household attributes](#list-household-attributes)
+* [List products](#list-products)
 
 ### Retrieve a campaign
 
@@ -321,7 +323,7 @@ Parameter | Type | Description | Example
 `state` | *String* | The 2-letter postal abbreviation of the lead's state. | `VT`
 **`postcode`** | *String* | The lead's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
 `became_lead_at` | *String* | A [parseable](http://ruby-doc.org/stdlib-2.1.1/libdoc/date/rdoc/Date.html#method-c-parse) date/time string indicating when the lead emerged. Uses the current time if missing. | `10:30am 3 Feb 2015`
-`attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#options-households); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
+`attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this lead by determining its inclusion in the specified segment, if the lead can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 `predict` | *UUID* | Instruct Faraday to predict the likelihood that the lead will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `066cdf0f-8cf4-4def-ac47-fb5e85f548c2`
 
@@ -404,3 +406,28 @@ Top-level key | Description | Example
 `name`        | The `snake_case` identifier for the attribute | `household_income`
 `description` | A short human-readable description of the attribute | `Household income`
 `type`        | Either `continuous` (numeric), `boolean`, or an array of valid categories (each a string) for categorical attributes | `continuous`
+
+### List products
+
+Faraday maintains an internal database of products (e.g. "Solar," "Life insurance") to facilitate predictive model creation. Some API requests require the ID of a product; use this request to find that ID.
+
+#### Request
+
+```http
+GET https://api.faraday.io/v1/products
+Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+Accept: application/json
+```
+
+#### Parameters
+
+None.
+
+#### Response
+
+The response is a JSON array, each element of which is an object with the following structure:
+
+Top-level key | Description | Example
+--------------|-------------|--------
+`product_id`  | The internal ID of the product. | `07224389-ae7a-4b0e-b3c8-49e110e9c285`
+`name`        | The `Sentence case` name of the product. | `Life insurance`
