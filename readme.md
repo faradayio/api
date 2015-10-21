@@ -1,7 +1,8 @@
 # Faraday API
 
 * [Overview](#overview)
-* [Versions](#versions)
+  * [Versions](#versions)
+  * [Contributing](#contributing)
 * [Basics](#basics)
   * [Environments](#environments)
   * [URLs](#urls)
@@ -28,6 +29,12 @@ Faraday exposes a REST-style API for retrieving and manipulating data.
 ### Versions
 
 * API version `v1` is currently in **alpha**
+
+### Contributing
+
+* **Want a new resource exposed in the API?** Submit a pull request documenting the change you'd like to see.
+
+* **Have a question or other feedback?** Open an issue.
 
 ## Basics
 
