@@ -325,7 +325,6 @@ Parameter | Type | Description | Example
 `became_lead_at` | *String* | A [parseable](http://ruby-doc.org/stdlib-2.1.1/libdoc/date/rdoc/Date.html#method-c-parse) date/time string indicating when the lead emerged. Uses the current time if missing. | `10:30am 3 Feb 2015`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this lead by determining its inclusion in the specified segment, if the lead can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`predict` | *UUID* | Instruct Faraday to predict the likelihood that the lead will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `066cdf0f-8cf4-4def-ac47-fb5e85f548c2`
 
 #### Response
 
@@ -337,7 +336,6 @@ Top-level key | Value description | Example
 `person` | The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualification` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
-`prediction` | A number between -1 and 1 indicating the likelihood that the matched household (if such a match was possible) will purchase the product specified in the request. Positive values indicate that the household is predicted to purchase; negative values indicate the the household is predicted to reject. The absolute value of the number indicates Faraday's confidence in its prediction. | `0.89` (i.e., predicted to purchase with 89% confidence)
 
 ### Record a prospect
 
@@ -367,7 +365,6 @@ Parameter | Type | Description | Example
 `became_prospect_at` | *String* | A [parseable](http://ruby-doc.org/stdlib-2.1.1/libdoc/date/rdoc/Date.html#method-c-parse) date/time string indicating when the prospect was or will be contacted. Uses the current time if missing. | `10:30am 3 Feb 2015`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the prospect—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#options-households); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this prospect by determining its inclusion in the specified segment, if the prospect can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`predict` | *UUID* | Instruct Faraday to predict the likelihood that the prospect will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `066cdf0f-8cf4-4def-ac47-fb5e85f548c2`
 
 #### Response
 
@@ -379,7 +376,6 @@ Top-level key | Value description | Example
 `person` | The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualification` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
-`prediction` | A number between -1 and 1 indicating the likelihood that the matched household (if such a match was possible) will purchase the product specified in the request. Positive values indicate that the household is predicted to purchase; negative values indicate the the household is predicted to reject. The absolute value of the number indicates Faraday's confidence in its prediction. | `0.89` (i.e., predicted to purchase with 89% confidence)
 
 ### List household attributes
 
