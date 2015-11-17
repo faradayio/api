@@ -18,6 +18,7 @@
   * [Create a campaign](#create-a-campaign)
   * [Retrieve an audience](#retrieve-an-audience)
   * [Create an audience](#create-an-audience)
+  * [Record a customer](#record-a-customer)
   * [Record a lead](#record-a-lead)
   * [Record a prospect](#record-a-prospect)
   * [List household attributes](#list-household-attributes)
@@ -297,6 +298,47 @@ Top-level key | Value description | Example
 
 Note that your code should poll the newly created audience until it reaches `ready` status before continuing with further actions on this audience, such as building campaigns.
 
+### Record a customer
+
+A *customer* is a household that has purchased your product or service, whether or not as a result of Faraday-facilitated outreach. Reporting your customers to Faraday improves predictions and allows you to visualize and target your customers with the platform.
+
+#### Request
+
+```http
+POST https://api.faraday.io/v1/customers
+Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+Content-Type: application/json
+Accept: application/json
+```
+
+#### Parameters
+
+Required parameters in **bold**.
+
+Parameter | Type | Description | Example
+----------|------|-------------|--------
+`request_id` | *String* | An optional unique identifier which will be returned with the API response. (Consider generating a UUID.)
+**`person`** | *String* | The combined first and last name of the customer. | `Michael Faraday`
+**`house_number_and_street`** | *String* | The physical address of the customer. | `123 Main St.`
+`city` | *String* | The customer's city. | `Burlington`
+`state` | *String* | The 2-letter postal abbreviation of the customer's state. | `VT`
+**`postcode`** | *String* | The customer's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
+**`product_id`** | *String* | The UUID of a [recognized Faraday product](#list-products) indicating the purchase that was made by the customer. | `b9dfbba4-bdc3-47dd-8006-2ee84b4861d4`
+`became_customer_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the purchase was made. Uses the current time if missing. | `20151025T223451Z`
+`attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the customer—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
+`qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this customer by determining its inclusion in the specified segment, if the customer can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
+
+#### Response
+
+Top-level key | Value description | Example
+--------------|-------------------|--------
+`request_id`  | The request ID passed through from your request, if given. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
+`customer_id` | The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
+`household_id` | The internal Faraday ID (UUID) for the known household that the customer matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
+`person` | The name of record for the known household your customer matched to, if such a match could be made. | `Michael Faraday`
+`attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
+`qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+
 ### Record a lead
 
 In Faraday parlance, a *lead* is a household that has expressed interest in your product or service, often by *responding* to marketing—whether or not the campaign was facilitated by Faraday.
@@ -322,7 +364,7 @@ Parameter | Type | Description | Example
 `city` | *String* | The lead's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the lead's state. | `VT`
 **`postcode`** | *String* | The lead's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-`became_lead_at` | *String* | A [parseable](http://ruby-doc.org/stdlib-2.1.1/libdoc/date/rdoc/Date.html#method-c-parse) date/time string indicating when the lead emerged. Uses the current time if missing. | `10:30am 3 Feb 2015`
+`became_lead_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the lead emerged. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this lead by determining its inclusion in the specified segment, if the lead can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 
@@ -335,7 +377,7 @@ Top-level key | Value description | Example
 `household_id` | The internal Faraday ID (UUID) for the known household that the lead matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`qualification` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+`qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 
 ### Record a prospect
 
@@ -362,7 +404,7 @@ Parameter | Type | Description | Example
 `city` | *String* | The prospect's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the prospect's state. | `VT`
 **`postcode`** | *String* | The prospect's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-`became_prospect_at` | *String* | A [parseable](http://ruby-doc.org/stdlib-2.1.1/libdoc/date/rdoc/Date.html#method-c-parse) date/time string indicating when the prospect was or will be contacted. Uses the current time if missing. | `10:30am 3 Feb 2015`
+`became_prospect_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the lead emerged. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the prospect—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#options-households); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this prospect by determining its inclusion in the specified segment, if the prospect can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 
@@ -375,7 +417,7 @@ Top-level key | Value description | Example
 `household_id` | The internal Faraday ID (UUID) for the known household that the prospect matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`qualification` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+`qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 
 ### List household attributes
 
