@@ -7,6 +7,7 @@
   * [Environments](#environments)
   * [URLs](#urls)
   * [Authentication](#authentication)
+  * [Headers](#headers)
   * [Parameters](#parameters)
   * [Special request value types](#special-request-value-types)
     * [Segment specification](#segment-specification)
@@ -89,9 +90,19 @@ $ curl https://api.faraday.io/v1/campaigns \
   -u sk_test_E6V2sxvyYD5PX8a1tqqNE3eG:
 ```
 
+### Headers
+
+Required headers are in **bold**.
+
+Header | Description | Example
+-------|-------------|--------
+**`Accept`** | Indicates desired response format. Currently only JSON is supported. | `Accept: application/json`
+`Content-Type` | **Required for POST requests.** Indicates the request format. Currently only JSON is supported. | `Content-Type: application/json`
+`X-Request-Id` | If this header is set with a UUID in the request, it will be returned as-is in the response. Potentially useful for handling parallelized API consumption. | `X-Request-Id: 3fe4594e-10f5-46e8-8ab3-28b812a3fc47`
+
 ### Parameters
 
-The Faraday API accepts parameters in the query string (for GET-style requests) and as JSON in the request body (for POST-style requests). When sending JSON, don't forget to include `Content-Type: application/json` in your headers.
+The Faraday API accepts parameters in the query string (for GET-style requests) and as JSON in the request body (for POST-style requests).
 
 <!--
 
@@ -207,7 +218,6 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-`request_id` | *String* | An optional unique identifier which will be returned with the API response. (Consider generating a UUID.)
 **`channel`** | *String* | The channel the campaign will be launched on: `postal`, `telephone`, `canvassing`, `email`, or `social` | `social`
 **`maximum_size`** | *Integer* | The maximum size desired for the campaign (allows for unpredictable reachability). | `500`
 **`response_endpoints`** | *Object* | How campaign recipients would respond. Faraday uses this information to create unique tracking contact information that redirects to these endpoints. | `{ "phone": "+18024580441", "email": "sales@example.com", "web": "http://example.com/landingpage" }`
@@ -273,7 +283,6 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-`request_id` | *String* | An optional unique identifier which will be returned with the API response. (Consider generating a UUID.)
 **`segment`** | *Segment specification* | Describes the population segment from which to draw households when building this audience | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 **`name`** | *String* | A name for this audience | `Wealthy Brooklynites`
 **`product`** | *String* | The ID of a Faraday product | `15c13b63-250b-4c24-96a5-955ccd7f3ae0`
@@ -287,7 +296,6 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`request_id`  | The request ID passed through from your request, if given. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
 `audience_id` | The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
 `status` | The state of the audience as it undergoes its build: `pending`, `building`, `ready` | `building`
 `segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
@@ -317,8 +325,7 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-`request_id` | *String* | An optional unique identifier which will be returned with the API response. (Consider generating a UUID.)
-**`person`** | *String* | The combined first and last name of the customer. | `Michael Faraday`
+`person` | *String* | The combined first and last name of the customer. | `Michael Faraday`
 **`house_number_and_street`** | *String* | The physical address of the customer. | `123 Main St.`
 `city` | *String* | The customer's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the customer's state. | `VT`
@@ -332,10 +339,9 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`request_id`  | The request ID passed through from your request, if given. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
 `customer_id` | The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
 `household_id` | The internal Faraday ID (UUID) for the known household that the customer matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
-`person` | The name of record for the known household your customer matched to, if such a match could be made. | `Michael Faraday`
+`person` | Null unless provided in request. The name of record for the known household your customer matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 
@@ -358,8 +364,7 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-`request_id` | *String* | An optional unique identifier which will be returned with the API response. (Consider generating a UUID.)
-**`person`** | *String* | The combined first and last name of the lead. | `Michael Faraday`
+`person` | *String* | The combined first and last name of the lead. | `Michael Faraday`
 **`house_number_and_street`** | *String* | The physical address of the lead. | `123 Main St.`
 `city` | *String* | The lead's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the lead's state. | `VT`
@@ -372,10 +377,9 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`request_id`  | The request ID passed through from your request, if given. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
 `lead_id` | The internal Faraday ID (UUID) for your newly submitted lead. | `4a991134-2677-46c5-b01e-298582982fa0`
 `household_id` | The internal Faraday ID (UUID) for the known household that the lead matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
-`person` | The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
+`person` | Null unless provided in request. The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 
@@ -398,8 +402,7 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-`request_id` | *String* | An optional unique identifier which will be returned with the API response. (Consider generating a UUID.)
-**`person`** | *String* | The combined first and last name of the prospect. | `Michael Faraday`
+`person` | *String* | The combined first and last name of the prospect. | `Michael Faraday`
 **`house_number_and_street`** | *String* | The physical address of the prospect. | `123 Main St.`
 `city` | *String* | The prospect's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the prospect's state. | `VT`
@@ -412,10 +415,9 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`request_id`  | The request ID passed through from your request, if given. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
 `prospect_id` | The internal Faraday ID (UUID) for your newly submitted prospect. | `4a991134-2677-46c5-b01e-298582982fa0`
 `household_id` | The internal Faraday ID (UUID) for the known household that the prospect matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
-`person` | The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
+`person` | Null unless provided in request. The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 
