@@ -15,13 +15,14 @@
     * [Attribute condition](#attribute-condition)
   * [Responses](#responses)
 * [Requests](#requests)
-  * [Retrieve a campaign](#retrieve-a-campaign)
-  * [Create a campaign](#create-a-campaign)
+  * [Retrieve a list](#retrieve-a-list)
+  * [Create a list](#create-a-list)
   * [Retrieve an audience](#retrieve-an-audience)
   * [Create an audience](#create-an-audience)
   * [Record a customer](#record-a-customer)
   * [Record a lead](#record-a-lead)
   * [Record a prospect](#record-a-prospect)
+  * [Upload a file](#upload-a-file)
   * [List household attributes](#list-household-attributes)
   * [List products](#list-products)
 
@@ -49,7 +50,7 @@ Two environments are offered for developer convenience:
 
 * The **production** environment performs all requests against production data, returns complete responses, and incurs charges where applicable. Use of your **production API key** will perform API operations on the production environment.
 
-* The **test** environment also uses production data, but will not make any changes, returns partially elided responses, and does not incur charges. Use of your **test API key** will perform API operations on the test environment.
+* The **test** environment uses fake random data, will not make any changes, and does not incur charges. Use of your **test API key** will perform API operations on the test environment.
 
 <!--
 ### Rate limiting
@@ -86,7 +87,7 @@ In your Faraday settings, go to the [Integrations section](https://app.faraday.i
 Authentication to the API occurs via HTTP Basic Auth. Provide your API key as the basic auth username. You do not need to provide a password.
 
 ```shell
-$ curl https://api.faraday.io/v1/campaigns \
+$ curl https://api.faraday.io/v1/audiences \
   -u sk_test_E6V2sxvyYD5PX8a1tqqNE3eG:
 ```
 
@@ -158,25 +159,26 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 
 ## Requests
 
-* [Retrieve a campaign](#retrieve-a-campaign)
-* [Create a campaign](#create-a-campaign)
+* [Retrieve a list](#retrieve-a-list)
+* [Create a list](#create-a-list)
 * [Retrieve an audience](#retrieve-an-audience)
 * [Create an audience](#create-an-audience)
 * [Record a lead](#record-a-lead)
 * [Record a prospect](#record-a-prospect)
+* [Upload a file](#upload-a-file)
 * [List household attributes](#list-household-attributes)
 * [List products](#list-products)
 
-### Retrieve a campaign
+### Retrieve a list
 
-A Faraday *campaign* is a method for *contacting* some or all members of an *audience* using a specific *channel*. Depending on the channel, your campaign can be *pushed* to an *execution vendor* or *downloaded* as a list, or both.
+A Faraday *list* is the means to *contact* some or all members of an *audience*. Your list can be *pushed* to a *vendors* and/or *downloaded*.
 
 #### Request
 
-The first type of request retrieves the campaign's details:
+The first type of request retrieves the list's details:
 
 ```http
-GET https://api.faraday.io/v1/campaigns/57a257d0-752a-4a02-b039-93e56aeac77e
+GET https://api.faraday.io/v1/lsits/57a257d0-752a-4a02-b039-93e56aeac77e
 Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
 Accept: application/json
 ```
@@ -189,24 +191,20 @@ None
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`campaign_id`  | The internal Faraday ID (UUID) for this campaign. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
-`audience_id` | The internal Faraday ID (UUID) for the audience the campaign belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
-`status` | The current state of the campaign as it builds: `pending`, `building`, or `ready` | `ready`
-`channel` | The channel of the campaign (`postal`, `telephone`, `canvassing`, `email`, or `social`). | `social`
-`size` | The size of the campaign. Only included for `ready` campaigns. | `500`
-`list_url` | The URL to a downloadable list of this campaign's recipients, if available. Only included for `ready` campaigns. | `http://example.com/list.csv`
-`response_endpoints` | A summary of response endpoints, if response tracking is enabled for this campaign. | `{ "phone": "+18024580441", "email": "sales@example.com", "web": "http://example.com/landingpage" }`
-`tracking_domain` | The tracking domain selected for this campaign, if response tracking is enabled. | `acme.replyspot.com`
-`variants` | A summary of A/B-style variants, if configured for this campaign. | `{ "A": "Funny", "B": "Serious" }`
+`id`  | The internal Faraday ID (UUID) for this list. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
+`audience_id` | The internal Faraday ID (UUID) for the audience this list belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
+`status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `ready`
+`size` | The size of the list. Only included for `ready` lists. | `500`
+`download_url` | The URL to a downloadable list CSV. Only included for `ready` lists. | `http://example.com/list.csv`
 
-Note that your code may need to poll this resource until it achieves `ready` status when attempting to retrieve the campaign's size or list URL.
+Note that your code may need to poll this resource until it achieves `ready` status when attempting to retrieve the list's size or download URL.
 
-### Create a campaign
+### Create a list
 
 #### Request
 
 ```http
-POST https://api.faraday.io/v1/audiences/18b68e74-1953-4784-a37b-58e0c7d54961/campaigns
+POST https://api.faraday.io/v1/audiences/18b68e74-1953-4784-a37b-58e0c7d54961/lists
 Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
 Content-Type: application/json
 Accept: application/json
@@ -218,29 +216,19 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-**`channel`** | *String* | The channel the campaign will be launched on: `postal`, `telephone`, `canvassing`, `email`, or `social` | `social`
-**`maximum_size`** | *Integer* | The maximum size desired for the campaign (allows for unpredictable reachability). | `500`
-**`response_endpoints`** | *Object* | How campaign recipients would respond. Faraday uses this information to create unique tracking contact information that redirects to these endpoints. | `{ "phone": "+18024580441", "email": "sales@example.com", "web": "http://example.com/landingpage" }`
-**`tracking_domain`** | *String* | A domain to use for branding tracking URLs and email addresses. Specify a built-in Replyspot domain like `anything.replyspot.com` (the default), or use a custom domain like `mycampaign.mycompany.com` and add the corresponding CNAME record to your DNS (`mycampaign.mycompany.com. CNAME campaigns.faraday.io`) | `acme.replyspot.com`
-`variants` | *Array of strings* | A/B-style variants. If included, each recipient will be assigned randomly to one of these variants. | `["Funny", "Serious", "Casual"]`
+**`maximum_size`** | *Integer* | The maximum size desired for the list. | `500`
 
 #### Response
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`campaign_id`  | The internal Faraday ID (UUID) for this campaign. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
-`audience_id` | The internal Faraday ID (UUID) for the audience the campaign belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
-`status` | The current state of the campaign as it builds: `pending`, `building`, or `ready` | `building`
-`channel` | The channel of the campaign (`postal`, `telephone`, `canvassing`, `email`, or `social`). | `social`
-`size` | The size of the campaign. Only included for `ready` campaigns. | `500`
-`list_url` | The URL to a downloadable list of this campaign's recipients, if available. Only included for `ready` campaigns. | `http://example.com/list.csv`
-`response_endpoints` | A summary of response endpoints, if response tracking is enabled for this campaign. | `{ "phone": "+18024580441", "email": "sales@example.com", "web": "http://example.com/landingpage" }`
-`tracking_domain` | The tracking domain selected for this campaign, if response tracking is enabled. | `acme.replyspot.com`
-`variants` | A summary of A/B-style variants, if configured for this campaign. | `{ "A": "Funny", "B": "Serious" }`
+`id`  | The internal Faraday ID (UUID) for this list. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
+`audience_id` | The internal Faraday ID (UUID) for the audience this list belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
+`status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `building`
 
 ### Retrieve an audience
 
-A Faraday *audience* is a fixed group of specific households within a geography that meet a set of criteria. Audiences are the basis for *campaigns* and must be created first.
+A Faraday *audience* is a fixed group of specific households within a geography that meet a set of criteria. Audiences are the basis for *lists* and must be created first.
 
 #### Request
 
@@ -258,13 +246,13 @@ None.
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`audience_id` | The internal Faraday ID (UUID) of the audience | `3bdbf545-d5d8-4ddb-b813-f954a1882cc2`
+`id` | The internal Faraday ID (UUID) of the audience | `3bdbf545-d5d8-4ddb-b813-f954a1882cc2`
+`audience_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) of the audience | `3bdbf545-d5d8-4ddb-b813-f954a1882cc2`
 `status` | The audience's current state (`pending`, `building`, or `ready`) | `ready`
 `segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 `sizing_method` | A summary of the approach used to arrive at the audience's size | `{ "maximum_size": 10000, "quality_tolerance": 0 }`
 `size` | The size of the audience—only available when `ready` | `9434`
-`campaign_count` | The number of campaigns launched against this audience | `3`
-`reachability` | A summary of the audience's reachability by channel | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
+`reachability` | A summary of the audience's reachability by channel—only available when `ready` | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
 
 ### Create an audience
 
@@ -289,22 +277,20 @@ Parameter | Type | Description | Example
 `predict` | *Boolean* | Enables predictive targeting, which will select households in your segment with the highest likelihood of purchasing your product first | `true`
 `maximum_size` | *Integer* | Faraday will add households from your segment to the audience (according to quality tolerance, if predictive targeting is enabled) until this size is reached | `10000`
 `quality_tolerance` | *String* | With predictive targeting enabled, this controls the heuristic for adding households from your segment to this audience before stopping — with the default of `0`, the system will stop adding households once its confidence in the next-best household purchasing your product falls below 50%; with `1` the system will accept any households predicted to purchase, regardless of confidence, and with `2` the system will accept any household from the specified segment, regardless of predicted outcome | `1`
-`minimum_size` | *Integer* | Ensures the audience will contain at least this many households, constrained only by the size of the segment itself and overriding the quality tolerance if necessary | `5000`
+`minimum_size` | *Integer* or *Float* | Ensures the audience will contain at least this many households, constrained only by the size of the segment itself and overriding the quality tolerance if necessary; float values between `0.0` and `1.0` indicate a percentage of the segment, other integers indicate a household count | `5000`
 
 
 #### Response
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`audience_id` | The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
+`id` | The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
+`audience_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
 `status` | The state of the audience as it undergoes its build: `pending`, `building`, `ready` | `building`
 `segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 `sizing_method` | A summary of the approach used to arrive at the audience's size | `{ "maximum_size": 10000, "quality_tolerance": 0 }`
-`size` | The ultimate size of the audience—only available when `ready` | `9434`
-`campaign_count` | The number of campaigns launched against this audience | `0`
-`reachability` | A summary of the audience's reachability by channel | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
 
-Note that your code should poll the newly created audience until it reaches `ready` status before continuing with further actions on this audience, such as building campaigns.
+Note that your code should poll the newly created audience until it reaches `ready` status before continuing with further actions on this audience, such as building lists.
 
 ### Record a customer
 
@@ -339,7 +325,8 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`customer_id` | The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
+`id` | The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
+`customer_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
 `household_id` | The internal Faraday ID (UUID) for the known household that the customer matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your customer matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
@@ -378,7 +365,8 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`lead_id` | The internal Faraday ID (UUID) for your newly submitted lead. | `4a991134-2677-46c5-b01e-298582982fa0`
+`id` | The internal Faraday ID (UUID) for your newly submitted lead. | `4a991134-2677-46c5-b01e-298582982fa0`
+`lead_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly submitted lead. | `4a991134-2677-46c5-b01e-298582982fa0`
 `household_id` | The internal Faraday ID (UUID) for the known household that the lead matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
@@ -417,11 +405,40 @@ Parameter | Type | Description | Example
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
-`prospect_id` | The internal Faraday ID (UUID) for your newly submitted prospect. | `4a991134-2677-46c5-b01e-298582982fa0`
+`id` | The internal Faraday ID (UUID) for your newly submitted prospect. | `4a991134-2677-46c5-b01e-298582982fa0`
+`prospect_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly submitted prospect. | `4a991134-2677-46c5-b01e-298582982fa0`
 `household_id` | The internal Faraday ID (UUID) for the known household that the prospect matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+
+### Upload a file
+
+This endpoint can be used to submit bulk CSV data for managed ingestion, such as customer data, marketing lists, and points of interest. A Faraday analyst will inspect your file and may contact you for clarification.
+
+#### Request
+
+```http
+POST https://api.faraday.io/v1/files
+Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+Content-Type: application/json
+Accept: application/json
+```
+
+#### Parameters
+
+Required parameters in **bold**.
+
+Parameter | Type | Description | Example
+----------|------|-------------|--------
+**`url`** | *String* | Publicly accessible URL to the CSV file | `https://example.com/mydata.csv`
+**`email`** | *String* | An email address that can be contacted for clarification and will be notified upon ingestion | `analyst@example.com`
+
+#### Response
+
+Top-level key | Value description | Example
+--------------|-------------------|--------
+`id` | The internal Faraday ID (UUID) for your newly submitted file. | `4a991134-2677-46c5-b01e-298582982fa0`
 
 ### List household attributes
 
@@ -471,5 +488,5 @@ The response is a JSON array, each element of which is an object with the follow
 
 Top-level key | Description | Example
 --------------|-------------|--------
-`product_id`  | The internal ID of the product. | `07224389-ae7a-4b0e-b3c8-49e110e9c285`
+`id`  | The internal ID of the product. | `07224389-ae7a-4b0e-b3c8-49e110e9c285`
 `name`        | The `Sentence case` name of the product. | `Life insurance`
