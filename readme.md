@@ -288,7 +288,7 @@ Parameter | Type | Description | Example
 ----------|------|-------------|--------
 **`segment`** | *Segment specification* | Describes the population segment from which to draw households when building this audience | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 **`name`** | *String* | A name for this audience | `Wealthy Brooklynites`
-**`product`** | *String* | The ID of a Faraday product | `15c13b63-250b-4c24-96a5-955ccd7f3ae0`
+**`product_id`** | *String* | The ID of a Faraday product | `15c13b63-250b-4c24-96a5-955ccd7f3ae0`
 `predict` | *Boolean* | Adjusts predictive targeting, which will select households in your segment with the highest likelihood of purchasing your product first. `null` (default) uses standard predictive targeting, `true` enables additional modeling approaches for potential improvements in accuracy (at the expense of time), and `false` disables predictions. | `true`
 `max_size` | *Integer* | Faraday will add households as possible from your segment to the audience until this size is reached | `10000`
 
