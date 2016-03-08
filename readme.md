@@ -135,23 +135,27 @@ Top-level key | Description | Example
 
 A *geography* is used to describe a geographical area. There are currently five types of geographic areas that Faraday supports: **named places**, **zip codes**, **radius around current customers**, **radius around points of interest**, and **drawn areas**. Indicate geography type with the `type` field and use additional fields described below to identify the area itself.
 
+The most common geography type is a **named place**. Faraday maintains a [list of named places](https://github.com/faradayio/places).
+
 The format for each of the supported geography types:
 
 * **Named place**: `{ "type": "place", "id": "01234" }`. `id` must be a string to allow for leading zeroes.
 * **Zip code**: `{ "type": "zipcode", "id": "05401" }`
-* **Radius around customers** `{ "type": "customer_proximity", "distance": 1000 }`. `distance` is radius in meters.
-* **Radius around points of interest** `{ "type": "poi_proximity", "distance": 1000, "points_of_interest": [123, 456]}`
 * **Custom shape** `{ "type": "custom_shape", "shape": {...} }`. The provided `shape must be valid [GeoJSON](http://geojson.org/).
+* **Radius around customers** (must be combined with a non-radius geography type) `{ "type": "customer_proximity", "distance": 1000 }`. `distance` is radius in meters.
+* **Radius around points of interest** (must be combined with a non-radius geography type) `{ "type": "poi_proximity", "distance": 1000, "points_of_interest": [123, 456]}`
+
+Note that radiuses only work when combined with a named place, zip code, or custom shape.
 
 #### Attribute condition
 
 An *attribute condition* is generally one element of a JSON object listing several household criteria. Each such element must conform to the format appropriate for the [household attribute](#list-household-attributes) in question:
 
-* **Continuously variabled attributes** are specified with a range: `"household_income": [80000, 120000]`. For unbounded ranges, use `"-Infinity"` (no minimum) and `"Infinity"` (no maximum).
+* **Continuously variabled attributes** are specified with a range: `"household_income": [80000, 120000]`. For unbounded ranges, use `"-Infinity"` (no minimum) and `"Infinity"` (no maximum). To specifically look for null values (no coverage), use `"NULL"`.
 
-* **Boolean attributes**: `"gardener": false`.
+* **Boolean attributes**: `"gardener": false`. To specifically look for null values (no coverage), use `"NULL"`; if non-truthy, `"FALSE_OR_NULL"`.
 
-* **Categorical attributes** are specified with an array of valid desired categories: `"house_style": ["Ranch", "Townhouse"]`. Households must belong to *one* of the listed categories to meet the condition.
+* **Categorical attributes** are specified with an array of valid desired categories: `"house_style": ["Ranch", "Townhouse"]`. Households must belong to *one* of the listed categories to meet the condition. To specifically look for null values (no coverage), use `"NULL"`.
 
 ### Responses
 
@@ -163,6 +167,7 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 * [Create a list](#create-a-list)
 * [Retrieve an audience](#retrieve-an-audience)
 * [Create an audience](#create-an-audience)
+* [Record a customer](#record-a-customer)
 * [Record a lead](#record-a-lead)
 * [Record a prospect](#record-a-prospect)
 * [Upload a file](#upload-a-file)
@@ -171,6 +176,8 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 
 ### Retrieve a list
 
+**Status:** In development
+
 A Faraday *list* is the means to *contact* some or all members of an *audience*. Your list can be *pushed* to a *vendors* and/or *downloaded*.
 
 #### Request
@@ -178,7 +185,7 @@ A Faraday *list* is the means to *contact* some or all members of an *audience*.
 The first type of request retrieves the list's details:
 
 ```http
-GET https://api.faraday.io/v1/lsits/57a257d0-752a-4a02-b039-93e56aeac77e
+GET https://api.faraday.io/v1/lists/57a257d0-752a-4a02-b039-93e56aeac77e
 Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
 Accept: application/json
 ```
@@ -193,13 +200,16 @@ Top-level key | Value description | Example
 --------------|-------------------|--------
 `id`  | The internal Faraday ID (UUID) for this list. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
 `audience_id` | The internal Faraday ID (UUID) for the audience this list belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
+`contact` | The types of contact information requested for the list. | `["postal"]`
 `status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `ready`
 `size` | The size of the list. Only included for `ready` lists. | `500`
 `download_url` | The URL to a downloadable list CSV. Only included for `ready` lists. | `http://example.com/list.csv`
 
-Note that your code may need to poll this resource until it achieves `ready` status when attempting to retrieve the list's size or download URL.
+Note that your code may need to poll this resource until it achieves `ready` state when attempting to retrieve the list's size or download URL.
 
 ### Create a list
+
+**Status:** In development
 
 #### Request
 
@@ -216,7 +226,8 @@ Required parameters in **bold**.
 
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
-**`maximum_size`** | *Integer* | The maximum size desired for the list. | `500`
+**`max_size`** | *Integer* | The maximum size desired for the list. | `500`
+`contact` | *Array* of *Strings* | Which types of contact information to include, if any. Allowed values are `postal` and `telephone`. | `["postal"]`
 
 #### Response
 
@@ -224,9 +235,12 @@ Top-level key | Value description | Example
 --------------|-------------------|--------
 `id`  | The internal Faraday ID (UUID) for this list. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
 `audience_id` | The internal Faraday ID (UUID) for the audience this list belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
+`contact` | The types of contact information requested for the list. | `["postal"]`
 `status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `building`
 
 ### Retrieve an audience
+
+**Status:** In development
 
 A Faraday *audience* is a fixed group of specific households within a geography that meet a set of criteria. Audiences are the basis for *lists* and must be created first.
 
@@ -247,14 +261,15 @@ None.
 Top-level key | Value description | Example
 --------------|-------------------|--------
 `id` | The internal Faraday ID (UUID) of the audience | `3bdbf545-d5d8-4ddb-b813-f954a1882cc2`
-`audience_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) of the audience | `3bdbf545-d5d8-4ddb-b813-f954a1882cc2`
 `status` | The audience's current state (`pending`, `building`, or `ready`) | `ready`
 `segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`sizing_method` | A summary of the approach used to arrive at the audience's size | `{ "maximum_size": 10000, "quality_tolerance": 0 }`
+`build_details` | A summary of the approach used to arrive at the audience's size | `{ "max_size": 10000, "predict": true }`
 `size` | The size of the audience—only available when `ready` | `9434`
 `reachability` | A summary of the audience's reachability by channel—only available when `ready` | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
 
 ### Create an audience
+
+**Status:** In development
 
 #### Request
 
@@ -274,25 +289,25 @@ Parameter | Type | Description | Example
 **`segment`** | *Segment specification* | Describes the population segment from which to draw households when building this audience | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
 **`name`** | *String* | A name for this audience | `Wealthy Brooklynites`
 **`product`** | *String* | The ID of a Faraday product | `15c13b63-250b-4c24-96a5-955ccd7f3ae0`
-`predict` | *Boolean* | Enables predictive targeting, which will select households in your segment with the highest likelihood of purchasing your product first | `true`
-`maximum_size` | *Integer* | Faraday will add households from your segment to the audience (according to quality tolerance, if predictive targeting is enabled) until this size is reached | `10000`
-`quality_tolerance` | *String* | With predictive targeting enabled, this controls the heuristic for adding households from your segment to this audience before stopping — with the default of `0`, the system will stop adding households once its confidence in the next-best household purchasing your product falls below 50%; with `1` the system will accept any households predicted to purchase, regardless of confidence, and with `2` the system will accept any household from the specified segment, regardless of predicted outcome | `1`
-`minimum_size` | *Integer* or *Float* | Ensures the audience will contain at least this many households, constrained only by the size of the segment itself and overriding the quality tolerance if necessary; float values between `0.0` and `1.0` indicate a percentage of the segment, other integers indicate a household count | `5000`
-
+`predict` | *Boolean* | Adjusts predictive targeting, which will select households in your segment with the highest likelihood of purchasing your product first. `null` (default) uses standard predictive targeting, `true` enables additional modeling approaches for potential improvements in accuracy (at the expense of time), and `false` disables predictions. | `true`
+`max_size` | *Integer* | Faraday will add households as possible from your segment to the audience until this size is reached | `10000`
 
 #### Response
 
 Top-level key | Value description | Example
 --------------|-------------------|--------
 `id` | The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
-`audience_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
 `status` | The state of the audience as it undergoes its build: `pending`, `building`, `ready` | `building`
 `segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`sizing_method` | A summary of the approach used to arrive at the audience's size | `{ "maximum_size": 10000, "quality_tolerance": 0 }`
+`build_details` | A summary of the approach used to arrive at the audience's size | `{ "max_size": 10000, "predict": true }`
+`size` | The size of the audience—only available when `ready` | `9434`
+`reachability` | A summary of the audience's reachability by channel—only available when `ready` | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
 
-Note that your code should poll the newly created audience until it reaches `ready` status before continuing with further actions on this audience, such as building lists.
+Note that your code should poll the newly created audience until it reaches `ready` state before continuing with further actions on this audience, such as building lists.
 
 ### Record a customer
+
+**Status:** Live
 
 A *customer* is a household that has purchased your product or service, whether or not as a result of Faraday-facilitated outreach. Reporting your customers to Faraday improves predictions and allows you to visualize and target your customers with the platform.
 
@@ -331,8 +346,11 @@ Top-level key | Value description | Example
 `person` | Null unless provided in request. The name of record for the known household your customer matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+`disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `[{"household_income": "expected between 50000.0 and Infinity, but outside"}]`
 
 ### Record a lead
+
+**Status:** Live
 
 In Faraday parlance, a *lead* is a household that has expressed interest in your product or service, often by *responding* to marketing—whether or not the campaign was facilitated by Faraday.
 
@@ -371,8 +389,11 @@ Top-level key | Value description | Example
 `person` | Null unless provided in request. The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+`disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
 
 ### Record a prospect
+
+**Status:** Live
 
 In Faraday parlance, a *prospect* is a household that has been contacted (or will shortly be contacted) but where an outcome is not yet known.
 
@@ -411,6 +432,7 @@ Top-level key | Value description | Example
 `person` | Null unless provided in request. The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
+`disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
 
 ### Upload a file
 
@@ -442,6 +464,8 @@ Top-level key | Value description | Example
 
 ### List household attributes
 
+**Status:** Live
+
 Faraday maintains data on each U.S. household, as many as hundreds of attributes depending on local coverage. This list of attributes changes frequently as new data sources are added.
 
 #### Request
@@ -467,6 +491,8 @@ Top-level key | Description | Example
 `type`        | Either `continuous` (numeric), `boolean`, or an array of valid categories (each a string) for categorical attributes | `continuous`
 
 ### List products
+
+**Status:** Live
 
 Faraday maintains an internal database of products (e.g. "Solar," "Life insurance") to facilitate predictive model creation. Some API requests require the ID of a product; use this request to find that ID.
 
