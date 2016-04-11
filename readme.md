@@ -203,7 +203,7 @@ Top-level key | Value description | Example
 `contact` | The types of contact information requested for the list. | `["postal"]`
 `status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `ready`
 `size` | The size of the list. Only included for `ready` lists. | `500`
-`download_url` | The URL to a downloadable list CSV. Only included for `ready` lists. | `http://example.com/list.csv`
+`download_url` | The URL to a downloadable list CSV. Only included for `ready` lists. Note that the URL may contain encoded Unicode characters and should be properly parsed as JSON before using. | `http://example.com/list.csv`
 
 Note that your code may need to poll this resource until it achieves `ready` state when attempting to retrieve the list's size or download URL.
 
@@ -454,7 +454,7 @@ Required parameters in **bold**.
 Parameter | Type | Description | Example
 ----------|------|-------------|--------
 **`url`** | *String* | Publicly accessible URL to the CSV file | `https://example.com/mydata.csv`
-**`email`** | *String* | An email address that can be contacted for clarification and will be notified upon ingestion | `analyst@example.com`
+**`email`** | *String* | An email address of a valid Faraday user for use in clarification after ingestion | `some.user@your_company.com`
 
 #### Response
 
