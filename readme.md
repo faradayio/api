@@ -378,6 +378,7 @@ Parameter | Type | Description | Example
 **`became_lead_at`** | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the lead emerged. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this lead by determining its inclusion in the specified segment, if the lead can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
+`predict` | *Boolean* | Instruct Faraday to predict the likelihood that the lead will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `true`
 
 #### Response
 
@@ -388,6 +389,7 @@ Top-level key | Value description | Example
 `household_id` | The internal Faraday ID (UUID) for the known household that the lead matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
+`predict` | A number between -1 and 1 indicating the likelihood that the matched household (if such a match was possible) will purchase the product specified in the request. Positive values indicate that the household is predicted to purchase; negative values indicate the the household is predicted to reject. The absolute value of the number indicates Faraday's confidence in its prediction. A null response value indicates that a prediction was impossible. | `0.89`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 `disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
 
@@ -421,6 +423,7 @@ Parameter | Type | Description | Example
 `became_prospect_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the prospect emerged. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the prospect—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#options-households); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this prospect by determining its inclusion in the specified segment, if the prospect can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
+`predict` | *Boolean* | Instruct Faraday to predict the likelihood that the lead will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `true`
 
 #### Response
 
@@ -431,6 +434,7 @@ Top-level key | Value description | Example
 `household_id` | The internal Faraday ID (UUID) for the known household that the prospect matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
+`predict` | A number between -1 and 1 indicating the likelihood that the matched household (if such a match was possible) will purchase the product specified in the request. Positive values indicate that the household is predicted to purchase; negative values indicate the the household is predicted to reject. The absolute value of the number indicates Faraday's confidence in its prediction. A missing response value indicates that a prediction was impossible. | `0.89`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 `disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
 
