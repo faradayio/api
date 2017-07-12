@@ -15,10 +15,6 @@
     * [Attribute condition](#attribute-condition)
   * [Responses](#responses)
 * [Requests](#requests)
-  * [Retrieve a list](#retrieve-a-list)
-  * [Create a list](#create-a-list)
-  * [Retrieve an audience](#retrieve-an-audience)
-  * [Create an audience](#create-an-audience)
   * [Record a customer](#record-a-customer)
   * [Record a lead](#record-a-lead)
   * [Record a prospect](#record-a-prospect)
@@ -82,9 +78,9 @@ HTTPS is required for all requests.
 
 ### Authentication
 
-In your Faraday settings, go to the [Integrations section](https://app.faraday.io/#/settings/integrations). You will see two API tokens provided, one for the production environment, and one for test. See the section on Environments for more information.
+Request an API token from Customer Success.
 
-Authentication to the API occurs via HTTP Basic Auth. Provide your API key as the basic auth username. You do not need to provide a password.
+Authentication to the API occurs via HTTP Basic Auth. Provide your API key as the basic auth username, leaving the password section blank.
 
 ```shell
 $ curl https://api.faraday.io/v1/audiences \
@@ -163,147 +159,12 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 
 ## Requests
 
-* [Retrieve a list](#retrieve-a-list)
-* [Create a list](#create-a-list)
-* [Retrieve an audience](#retrieve-an-audience)
-* [Create an audience](#create-an-audience)
 * [Record a customer](#record-a-customer)
 * [Record a lead](#record-a-lead)
 * [Record a prospect](#record-a-prospect)
 * [Upload a file](#upload-a-file)
 * [List household attributes](#list-household-attributes)
 * [List products](#list-products)
-
-### Retrieve a list
-
-**Status:** In development
-
-A Faraday *list* is the means to *contact* some or all members of an *audience*. Your list can be *pushed* to a *vendors* and/or *downloaded*.
-
-#### Request
-
-The first type of request retrieves the list's details:
-
-```http
-GET https://api.faraday.io/v1/lists/57a257d0-752a-4a02-b039-93e56aeac77e
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Accept: application/json
-```
-
-#### Parameters
-
-None
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id`  | The internal Faraday ID (UUID) for this list. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
-`audience_id` | The internal Faraday ID (UUID) for the audience this list belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
-`contact` | The types of contact information requested for the list. | `["postal"]`
-`status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `ready`
-`size` | The size of the list. Only included for `ready` lists. | `500`
-`download_url` | The URL to a downloadable list CSV. Only included for `ready` lists. Note that the URL may contain encoded Unicode characters and should be properly parsed as JSON before using. | `http://example.com/list.csv`
-
-Note that your code may need to poll this resource until it achieves `ready` state when attempting to retrieve the list's size or download URL.
-
-### Create a list
-
-**Status:** In development
-
-#### Request
-
-```http
-POST https://api.faraday.io/v1/audiences/18b68e74-1953-4784-a37b-58e0c7d54961/lists
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
-
-#### Parameters
-
-Required parameters in **bold**.
-
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-**`max_size`** | *Integer* | The maximum size desired for the list. | `500`
-`contact` | *Array* of *Strings* | Which types of contact information to include, if any. Allowed values are `postal` and `telephone`. | `["postal"]`
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id`  | The internal Faraday ID (UUID) for this list. | `105b15a0-d539-4b13-861f-ccdb35b0b6ea`
-`audience_id` | The internal Faraday ID (UUID) for the audience this list belongs to. | `84d64b50-4610-4b7c-ba27-76af665480a8`
-`contact` | The types of contact information requested for the list. | `["postal"]`
-`status` | The current state of the list as it builds: `pending`, `building`, or `ready` | `building`
-
-### Retrieve an audience
-
-**Status:** In development
-
-A Faraday *audience* is a fixed group of specific households within a geography that meet a set of criteria. Audiences are the basis for *lists* and must be created first.
-
-#### Request
-
-```http
-GET https://api.faraday.io/v1/audiences/3bdbf545-d5d8-4ddb-b813-f954a1882cc2
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Accept: application/json
-```
-
-#### Parameters
-
-None.
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) of the audience | `3bdbf545-d5d8-4ddb-b813-f954a1882cc2`
-`status` | The audience's current state (`pending`, `building`, or `ready`) | `ready`
-`segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`build_details` | A summary of the approach used to arrive at the audience's size | `{ "max_size": 10000, "predict": true }`
-`size` | The size of the audience—only available when `ready` | `9434`
-`reachability` | A summary of the audience's reachability by channel—only available when `ready` | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
-
-### Create an audience
-
-**Status:** In development
-
-#### Request
-
-```http
-POST https://api.faraday.io/v1/audiences
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
-
-#### Parameters
-
-Required parameters in **bold**.
-
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-**`segment`** | *Segment specification* | Describes the population segment from which to draw households when building this audience | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-**`name`** | *String* | A name for this audience | `Wealthy Brooklynites`
-**`product_id`** | *String* | The ID of a Faraday product | `15c13b63-250b-4c24-96a5-955ccd7f3ae0`
-`predict` | *Boolean* | Adjusts predictive targeting, which will select households in your segment with the highest likelihood of purchasing your product first. `null` (default) uses standard predictive targeting, `true` enables additional modeling approaches for potential improvements in accuracy (at the expense of time), and `false` disables predictions. | `true`
-`max_size` | *Integer* | Faraday will add households as possible from your segment to the audience until this size is reached | `10000`
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for your newly created audience | `8c52b329-33b5-4d3a-b0ab-1aed32db633a`
-`status` | The state of the audience as it undergoes its build: `pending`, `building`, `ready` | `building`
-`segment` | The geography and criteria used to construct this audience, delivered as a [segment specficiation](#segment-specification) | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`build_details` | A summary of the approach used to arrive at the audience's size | `{ "max_size": 10000, "predict": true }`
-`size` | The size of the audience—only available when `ready` | `9434`
-`reachability` | A summary of the audience's reachability by channel—only available when `ready` | `{ "postal": 9434, "telephone": 4993, "email": 3542, "social": 4853 }`
-
-Note that your code should poll the newly created audience until it reaches `ready` state before continuing with further actions on this audience, such as building lists.
 
 ### Record a customer
 
