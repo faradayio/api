@@ -135,7 +135,7 @@ The most common geography type is a **named place**. Faraday maintains a [list o
 
 The format for each of the supported geography types:
 
-* **Named place**: `{ "type": "place", "id": "01234" }`. `id` must be a string to allow for leading zeroes.
+* **Named place**: `{ "type": "place", "id": "01234", "name": "Burlington, VT" }`. `id` must be a string to allow for leading zeroes.
 * **Zip code**: `{ "type": "zipcode", "id": "05401" }`
 * **Custom shape** `{ "type": "custom_shape", "shape": {...} }`. The provided `shape must be valid [GeoJSON](http://geojson.org/).
 * **Radius around customers** (must be combined with a non-radius geography type) `{ "type": "customer_proximity", "distance": 1000 }`. `distance` is radius in meters.
@@ -159,6 +159,13 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 
 ## Requests
 
+### V2 API
+
+* [Create an audience for a campaign](#create-an-audience)
+* [Create a delivery for a campaign](#create-a-delivery)
+
+### V1 API
+
 * [Record a customer](#record-a-customer)
 * [Record a lead](#record-a-lead)
 * [Record a prospect](#record-a-prospect)
@@ -166,9 +173,119 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 * [List household attributes](#list-household-attributes)
 * [List products](#list-products)
 
-### Record a customer
+### Create an audience
 
-**Status:** Live
+An audience is a saved set of search criteria for households in a given
+geography. Audiences are created as part of a campaign.
+
+#### Request
+
+```http
+POST https://api.faraday.io/v2/campaigns/<campaign_id>/audiences
+Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+Content-Type: application/json
+Accept: application/json
+```
+
+#### Parameters
+
+Required parameters in **bold**.
+
+Parameter | Type | Description | Example
+----------|------|-------------|--------
+`geography` | *Array of objects* | A [geography definition](#geography)). | [{ "type": "place", "id": "01234", "name": "Burlington, VT" }]
+`geography_mode` | *String* | How to treat overlapping geographies, `union` or `intersection`. Default is `union` | `intersection`
+`definition` | *Object* | Values for various household fields to filter by | `{"household_income": [0,100000]}`
+
+#### Response
+
+Top-level key | Value description | Example
+--------------|-------------------|--------
+`id` | The internal Faraday ID (UUID) for the new audience. | `4a991134-2677-46c5-b01e-298582982fa0`
+`geography` | *Array of objects* | A [geography definition](#geography)). | [{ "type": "place", "id": "01234", "name": "Burlington, VT" }]
+`geography_mode` | *String* | How overlapping geographies are treated | `union`
+`definition` | *Object* | Values for various household fields to filter by | `{"household_income": [0,100000]}`
+
+### Create a delivery
+
+A delivery picks the best households from an audience and exports the list to a
+spreadsheet or a third party service. Once a delivery is created, it takes a few
+moments to build. On creation you will get a delivery ID and will need to poll
+the delivery show endpoint until it is finished in order to download its
+spreadsheet.
+
+*Note*: You must [create an audience](#create-an-audience) for the given
+campaign prior to creating a delivery.
+
+#### Request
+
+```http
+POST https://api.faraday.io/v2/campaigns/<campaign_id>/deliveries
+Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+Content-Type: application/json
+Accept: application/json
+```
+
+#### Parameters
+
+Required parameters in **bold**.
+
+Parameter | Type | Description | Example
+----------|------|-------------|--------
+`channel` | *String* | A means of delivery, i.e. "mail." | See [channels and methods](#channels-and-methods)
+`method` | *String* | How the channel is delivered, usually a vendor name or "diy" | See [channels-and-methods](#channels-and-methods)
+`max_households` | *Integer* | 
+
+##### Channels and methods
+
+Currently supported channels:
+
+Channel    | Method       | Description
+-----------|--------------|------------
+canvassing | diy          | Address lists for door-to-door canvassing
+canvassing | salesrabbit  | Send list to a configured SalesRabbit account
+display    | aol          | AOL ads
+display    | appnexus     | AppNexus display ads service
+display    | datalab      | DataLab display ads service
+display    | yahoo        | Yahoo ads
+mail       | diy          | Postal mail
+email      | bmi          | Email via BMI matching
+email      | freshaddress | Email via FreshAddress matching
+mobile     | 4info        | Mobile ads via 4Info
+social     | facebook     | Facebook matching and audience building
+social     | twitter      | Twitter matching
+phone      | callfire     | Export to CallFire.com
+phone      | diy          | Phone numbers
+
+#### Response
+
+Top-level key | Value description | Example
+--------------|-------------------|--------
+`id` | The internal Faraday ID (UUID) for the new delivery. | `4a991134-2677-46c5-b01e-298582982fa0`
+
+### Get a delivery
+
+Fetches information about a delivery, including its progress.
+
+#### Request
+
+```http
+GET https://api.faraday.io/v2/deliveries/<delivery_id>
+Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+Accept: application/json
+```
+
+#### Response
+
+Top-level key | Value description | Example
+--------------|-------------------|--------
+`id` | The internal Faraday ID (UUID) for the new delivery. | `4a991134-2677-46c5-b01e-298582982fa0`
+`max_households` | The requested number of households | `123`
+`delivered_households` | The actual number of households delivered | `42`
+`delivered` | Whether the delivery has finished | `true`
+`download_url` | Link to a page where a logged-in user can download the delivery | `https://app.faraday.io/downloads/deliveries/1`
+
+### Record a customer
 
 A *customer* is a household that has purchased your product or service, whether or not as a result of Faraday-facilitated outreach. Reporting your customers to Faraday improves predictions and allows you to visualize and target your customers with the platform.
 
@@ -210,8 +327,6 @@ Top-level key | Value description | Example
 `disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `[{"household_income": "expected between 50000.0 and Infinity, but outside"}]`
 
 ### Record a lead
-
-**Status:** Live
 
 In Faraday parlance, a *lead* is a household that has expressed interest in your product or service, often by *responding* to marketing—whether or not the campaign was facilitated by Faraday.
 
@@ -255,8 +370,6 @@ Top-level key | Value description | Example
 `disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
 
 ### Record a prospect
-
-**Status:** Live
 
 In Faraday parlance, a *prospect* is a household that has been contacted (or will shortly be contacted) but where an outcome is not yet known.
 
@@ -329,8 +442,6 @@ Top-level key | Value description | Example
 
 ### List household attributes
 
-**Status:** Live
-
 Faraday maintains data on each U.S. household, as many as hundreds of attributes depending on local coverage. This list of attributes changes frequently as new data sources are added.
 
 #### Request
@@ -356,8 +467,6 @@ Top-level key | Description | Example
 `type`        | Either `continuous` (numeric), `boolean`, or an array of valid categories (each a string) for categorical attributes | `continuous`
 
 ### List products
-
-**Status:** Live
 
 Faraday maintains an internal database of products (e.g. "Solar," "Life insurance") to facilitate predictive model creation. Some API requests require the ID of a product; use this request to find that ID.
 
