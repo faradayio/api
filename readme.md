@@ -15,12 +15,16 @@
     * [Attribute condition](#attribute-condition)
   * [Responses](#responses)
 * [Requests](#requests)
-  * [Record a customer](#record-a-customer)
-  * [Record a lead](#record-a-lead)
-  * [Record a prospect](#record-a-prospect)
-  * [Upload a file](#upload-a-file)
-  * [List household attributes](#list-household-attributes)
-  * [List products](#list-products)
+  * [V2 API](#v2-api)
+    * [Create an audience for a campaign](#create-an-audience)
+    * [Create a delivery for a campaign](#create-a-delivery)
+  * [V1 API](#v1-api)
+    * [Record a customer](#record-a-customer)
+    * [Record a lead](#record-a-lead)
+    * [Record a prospect](#record-a-prospect)
+    * [Upload a file](#upload-a-file)
+    * [List household attributes](#list-household-attributes)
+    * [List products](#list-products)
 
 ## Overview
 
