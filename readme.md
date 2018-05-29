@@ -19,8 +19,6 @@
     * [Record a customer](#record-a-customer)
     * [Record a lead](#record-a-lead)
     * [Record a prospect](#record-a-prospect)
-    * [Upload a file](#upload-a-file)
-    * [List household attributes](#list-household-attributes)
 
 ## Overview
 
