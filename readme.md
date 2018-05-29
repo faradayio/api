@@ -15,16 +15,12 @@
     * [Attribute condition](#attribute-condition)
   * [Responses](#responses)
 * [Requests](#requests)
-  * [V2 API](#v2-api)
-    * [Create an audience for a campaign](#create-an-audience)
-    * [Create a delivery for a campaign](#create-a-delivery)
   * [V1 API](#v1-api)
     * [Record a customer](#record-a-customer)
     * [Record a lead](#record-a-lead)
     * [Record a prospect](#record-a-prospect)
     * [Upload a file](#upload-a-file)
     * [List household attributes](#list-household-attributes)
-    * [List products](#list-products)
 
 ## Overview
 
@@ -163,131 +159,11 @@ All responses will arrive as JSON. Your requests should include the `Accept: app
 
 ## Requests
 
-### V2 API
-
-* [Create an audience for a campaign](#create-an-audience)
-* [Create a delivery for a campaign](#create-a-delivery)
-
 ### V1 API
 
 * [Record a customer](#record-a-customer)
 * [Record a lead](#record-a-lead)
 * [Record a prospect](#record-a-prospect)
-* [Upload a file](#upload-a-file)
-* [List household attributes](#list-household-attributes)
-* [List products](#list-products)
-
-### Create an audience
-
-An audience is a saved set of search criteria for households in a given
-geography. Audiences are created as part of a campaign.
-
-#### Request
-
-```http
-POST https://api.faraday.io/v2/campaigns/<campaign_id>/audiences
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
-
-#### Parameters
-
-Required parameters in **bold**.
-
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-`geography` | *Array of objects* | A [geography definition](#geography)). | [{ "type": "place", "id": "01234", "name": "Burlington, VT" }]
-`geography_mode` | *String* | How to treat overlapping geographies, `union` or `intersection`. Default is `union` | `intersection`
-`definition` | *Object* | Values for various household fields to filter by | `{"household_income": [0,100000]}`
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for the new audience. | `4a991134-2677-46c5-b01e-298582982fa0`
-`geography` | *Array of objects* | A [geography definition](#geography)). | [{ "type": "place", "id": "01234", "name": "Burlington, VT" }]
-`geography_mode` | *String* | How overlapping geographies are treated | `union`
-`definition` | *Object* | Values for various household fields to filter by | `{"household_income": [0,100000]}`
-
-### Create a delivery
-
-A delivery picks the best households from an audience and exports the list to a
-spreadsheet or a third party service. Once a delivery is created, it takes a few
-moments to build. On creation you will get a delivery ID and will need to poll
-the delivery show endpoint until it is finished in order to download its
-spreadsheet.
-
-*Note*: You must [create an audience](#create-an-audience) for the given
-campaign prior to creating a delivery.
-
-#### Request
-
-```http
-POST https://api.faraday.io/v2/campaigns/<campaign_id>/deliveries
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
-
-#### Parameters
-
-Required parameters in **bold**.
-
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-`channel` | *String* | A means of delivery, i.e. "mail." | See [channels and methods](#channels-and-methods)
-`method` | *String* | How the channel is delivered, usually a vendor name or "diy" | See [channels-and-methods](#channels-and-methods)
-`max_households` | *Integer* | 
-
-##### Channels and methods
-
-Currently supported channels:
-
-Channel    | Method       | Description
------------|--------------|------------
-canvassing | diy          | Address lists for door-to-door canvassing
-canvassing | salesrabbit  | Send list to a configured SalesRabbit account
-display    | aol          | AOL ads
-display    | appnexus     | AppNexus display ads service
-display    | datalab      | DataLab display ads service
-display    | yahoo        | Yahoo ads
-mail       | diy          | Postal mail
-email      | bmi          | Email via BMI matching
-email      | freshaddress | Email via FreshAddress matching
-mobile     | 4info        | Mobile ads via 4Info
-social     | facebook     | Facebook matching and audience building
-social     | twitter      | Twitter matching
-phone      | callfire     | Export to CallFire.com
-phone      | diy          | Phone numbers
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for the new delivery. | `4a991134-2677-46c5-b01e-298582982fa0`
-
-### Get a delivery
-
-Fetches information about a delivery, including its progress.
-
-#### Request
-
-```http
-GET https://api.faraday.io/v2/deliveries/<delivery_id>
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Accept: application/json
-```
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for the new delivery. | `4a991134-2677-46c5-b01e-298582982fa0`
-`max_households` | The requested number of households | `123`
-`delivered_households` | The actual number of households delivered | `42`
-`delivered` | Whether the delivery has finished | `true`
-`download_url` | Link to a page where a logged-in user can download the delivery | `https://app.faraday.io/downloads/deliveries/1`
 
 ### Record a customer
 
@@ -313,7 +189,6 @@ Parameter | Type | Description | Example
 `city` | *String* | The customer's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the customer's state. | `VT`
 **`postcode`** | *String* | The customer's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-**`product_id`** | *String* | The UUID of a [recognized Faraday product](#list-products) indicating the purchase that was made by the customer. | `b9dfbba4-bdc3-47dd-8006-2ee84b4861d4`
 `became_customer_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the purchase was made. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the customer—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this customer by determining its inclusion in the specified segment, if the customer can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
@@ -354,11 +229,9 @@ Parameter | Type | Description | Example
 `city` | *String* | The lead's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the lead's state. | `VT`
 **`postcode`** | *String* | The lead's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-**`product_id`** | *String* | The UUID of a [recognized Faraday product](#list-products) indicating the category of interest for the lead. | `b9dfbba4-bdc3-47dd-8006-2ee84b4861d4`
 **`became_lead_at`** | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the lead emerged. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this lead by determining its inclusion in the specified segment, if the lead can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`predict` | *Boolean* | Instruct Faraday to predict the likelihood that the lead will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `true`
 
 #### Response
 
@@ -369,7 +242,6 @@ Top-level key | Value description | Example
 `household_id` | The internal Faraday ID (UUID) for the known household that the lead matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`predict` | A number between -1 and 1 indicating the likelihood that the matched household (if such a match was possible) will purchase the product specified in the request. Positive values indicate that the household is predicted to purchase; negative values indicate the the household is predicted to reject. The absolute value of the number indicates Faraday's confidence in its prediction. A null response value indicates that a prediction was impossible. | `0.89`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 `disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
 
@@ -397,11 +269,9 @@ Parameter | Type | Description | Example
 `city` | *String* | The prospect's city. | `Burlington`
 `state` | *String* | The 2-letter postal abbreviation of the prospect's state. | `VT`
 **`postcode`** | *String* | The prospect's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-**`product_id`** | *String* | The UUID of a [recognized Faraday product](#list-products) indicating the category of interest for the prospect. | `b9dfbba4-bdc3-47dd-8006-2ee84b4861d4`
 `became_prospect_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the prospect emerged. Uses the current time if missing. | `20151025T223451Z`
 `attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the prospect—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#options-households); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
 `qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this prospect by determining its inclusion in the specified segment, if the prospect can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-`predict` | *Boolean* | Instruct Faraday to predict the likelihood that the lead will purchase the specified [product](#list-products), if a high-confidence match can be made to a known Faraday household. | `true`
 
 #### Response
 
@@ -412,85 +282,5 @@ Top-level key | Value description | Example
 `household_id` | The internal Faraday ID (UUID) for the known household that the prospect matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
 `person` | Null unless provided in request. The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
 `attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`predict` | A number between -1 and 1 indicating the likelihood that the matched household (if such a match was possible) will purchase the product specified in the request. Positive values indicate that the household is predicted to purchase; negative values indicate the the household is predicted to reject. The absolute value of the number indicates Faraday's confidence in its prediction. A missing response value indicates that a prediction was impossible. | `0.89`
 `qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
 `disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
-
-### Upload a file
-
-This endpoint can be used to submit bulk CSV data for managed ingestion, such as customer data, marketing lists, and points of interest. A Faraday analyst will inspect your file and may contact you for clarification.
-
-#### Request
-
-```http
-POST https://api.faraday.io/v1/files
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
-
-#### Parameters
-
-Required parameters in **bold**.
-
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-**`url`** | *String* | Publicly accessible URL to the CSV file | `https://example.com/mydata.csv`
-**`email`** | *String* | An email address of a valid Faraday user for use in clarification after ingestion | `some.user@your_company.com`
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for your newly submitted file. | `4a991134-2677-46c5-b01e-298582982fa0`
-
-### List household attributes
-
-Faraday maintains data on each U.S. household, as many as hundreds of attributes depending on local coverage. This list of attributes changes frequently as new data sources are added.
-
-#### Request
-
-```http
-GET https://api.faraday.io/v1/household_attributes
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Accept: application/json
-```
-
-#### Parameters
-
-None.
-
-#### Response
-
-The response is a JSON array, each element of which is an object with the following structure:
-
-Top-level key | Description | Example
---------------|-------------|--------
-`name`        | The `snake_case` identifier for the attribute | `household_income`
-`description` | A short human-readable description of the attribute | `Household income`
-`type`        | Either `continuous` (numeric), `boolean`, or an array of valid categories (each a string) for categorical attributes | `continuous`
-
-### List products
-
-Faraday maintains an internal database of products (e.g. "Solar," "Life insurance") to facilitate predictive model creation. Some API requests require the ID of a product; use this request to find that ID.
-
-#### Request
-
-```http
-GET https://api.faraday.io/v1/products
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Accept: application/json
-```
-
-#### Parameters
-
-None.
-
-#### Response
-
-The response is a JSON array, each element of which is an object with the following structure:
-
-Top-level key | Description | Example
---------------|-------------|--------
-`id`  | The internal ID of the product. | `07224389-ae7a-4b0e-b3c8-49e110e9c285`
-`name`        | The `Sentence case` name of the product. | `Life insurance`
