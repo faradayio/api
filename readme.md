@@ -4,21 +4,14 @@
   * [Versions](#versions)
   * [Contributing](#contributing)
 * [Basics](#basics)
-  * [Environments](#environments)
   * [URLs](#urls)
   * [Authentication](#authentication)
-  * [Headers](#headers)
-  * [Parameters](#parameters)
   * [Special request value types](#special-request-value-types)
-    * [Segment specification](#segment-specification)
-    * [Geography](#geography)
-    * [Attribute condition](#attribute-condition)
+    * [Describing Audiences](#describing-audiences)
+    * [FIG attributes](#fig-attributes)
   * [Responses](#responses)
 * [Requests](#requests)
-  * [V1 API](#v1-api)
-    * [Record a customer](#record-a-customer)
-    * [Record a lead](#record-a-lead)
-    * [Record a prospect](#record-a-prospect)
+  * [Individuals](#individuals)
 
 ## Overview
 
@@ -26,7 +19,13 @@ Faraday exposes a REST-style API for retrieving and manipulating data.
 
 ### Versions
 
-* API version `v1` is currently in **alpha**
+The current version of the API is **v3**.
+
+#### History
+
+* API version `v1` is currently **deprecated**
+* API version `v2` is currently **deprecated**
+* API version `v3` is currently **active**
 
 ### Contributing
 
@@ -38,38 +37,18 @@ Faraday exposes a REST-style API for retrieving and manipulating data.
 
 All API requests share some common components.
 
-### Environments
-
-Two environments are offered for developer convenience:
-
-* The **production** environment performs all requests against production data, returns complete responses, and incurs charges where applicable. Use of your **production API key** will perform API operations on the production environment.
-
-* The **test** environment uses fake random data, will not make any changes, and does not incur charges. Use of your **test API key** will perform API operations on the test environment.
-
-<!--
-### Rate limiting
-
-API package | Rate limit
-------------|------------------
-Free        | 100 requests/hour
-Standard    | 1,000 requests/hour
-Extended    | Unlimited
-
-#### After you hit your limit
-
-Faraday will return [status 429](http://httpstatus.es/429).
-
-#### Checking rate limit status
-
-All responses include a `X-Ratelimit-Remaining` header. To check your quota without performing a real request, use the `HEAD` action instad of `GET`, `POST`, etc.
--->
-
 ### URLs
 
 API requests use the following base URL:
 
 ```
-https://api.faraday.io/v1
+https://api.faraday.io/[VERSION]
+```
+
+The **current** base URL is:
+
+```
+https://api.faraday.io/v3
 ```
 
 HTTPS is required for all requests.
@@ -78,207 +57,113 @@ HTTPS is required for all requests.
 
 Request an API token from Customer Success.
 
-Authentication to the API occurs via HTTP Basic Auth. Provide your API key as the basic auth username, leaving the password section blank.
-
-```shell
-$ curl https://api.faraday.io/v1/audiences \
-  -u sk_test_E6V2sxvyYD5PX8a1tqqNE3eG:
-```
-
-### Headers
-
-Required headers are in **bold**.
-
-Header | Description | Example
--------|-------------|--------
-**`Accept`** | Indicates desired response format. Currently only JSON is supported. | `Accept: application/json`
-`Content-Type` | **Required for POST requests.** Indicates the request format. Currently only JSON is supported. | `Content-Type: application/json`
-`X-Request-Id` | If this header is set with a UUID in the request, it will be returned as-is in the response. Potentially useful for handling parallelized API consumption. | `X-Request-Id: 3fe4594e-10f5-46e8-8ab3-28b812a3fc47`
-
-### Parameters
-
-The Faraday API accepts parameters in the query string (for GET-style requests) and as JSON in the request body (for POST-style requests).
-
-<!--
-
-### Accepting charges
-
-Many requests will cause your account to be charged. In order to avoid confusion, Faraday requires that you indicate your acknowledgement of this using the `Faraday-Accept-Charges` header:
-
-Value | Intent
-------|-------
-`false`     | **I do not accept charges for this request.** If the request would cause your account to be charged, Faraday will instead return [status 402](http://httpstatus.es/402).
-`true`    | **I accept charges for this request**.
-
--->
+Authentication to the API occurs via the `api_key` request param.
 
 ### Special request value types
 
 The request-level documentation below occasionally refers to a special type for a parameter.
 
-#### Segment specification
+#### Describing Audiences
 
-A *segment* describes the group of all known Faraday households in a given *geography* that meet certain *criteria*. A *segment specification* serializes this description into a JSON object:
+Some endpoints allow you to specify one or more Audiences (e.g. segment membership in the individuals endpoint). Each element of the Audiences array can describe an Audience in one of two forms:
 
-Top-level key | Description | Example
---------------|-------------|--------
-`geography` | A [geography](#geography) or array of geographies within which the households must be located to be included in the segment. When the array form is used, households must belong to *at least one* element to be considered in-segment. | `[{ "type": "place", "id": 1234 }, { "type": "place", "id": 5678 }]`
-`criteria` | An object whose key-value pairs are [attribute conditions](#attribute-condition) which households must meet to be included in the segment. A household must meet *all* criteria to be considered in-segment. | `[{ "household_income": [80000, 120000], "credit_rating": [700, "Infinity"]}]`
+1. **ID** — Give the ID, as a UUID string, of an Audience which has been previously created on the Faraday platform in your Account (e.g. by using Explore interactively).
+1. **Definition** — Express the from-scratch definition of the Audience in JSON using FIG attributes. For example:
 
-#### Geography
+```json
+{
+  "household_income": [0, 50000],
+  "gardener": true
+}
+```
 
-A *geography* is used to describe a geographical area. There are currently five types of geographic areas that Faraday supports: **named places**, **zip codes**, **radius around current customers**, **radius around points of interest**, and **drawn areas**. Indicate geography type with the `type` field and use additional fields described below to identify the area itself.
+#### FIG attributes
 
-The most common geography type is a **named place**. Faraday maintains a [list of named places](https://github.com/faradayio/places).
-
-The format for each of the supported geography types:
-
-* **Named place**: `{ "type": "place", "id": "01234", "name": "Burlington, VT" }`. `id` must be a string to allow for leading zeroes.
-* **Zip code**: `{ "type": "zipcode", "id": "05401" }`
-* **Custom shape** `{ "type": "custom_shape", "shape": {...} }`. The provided `shape must be valid [GeoJSON](http://geojson.org/).
-* **Radius around customers** (must be combined with a non-radius geography type) `{ "type": "customer_proximity", "distance": 1000 }`. `distance` is radius in meters.
-* **Radius around points of interest** (must be combined with a non-radius geography type) `{ "type": "poi_proximity", "distance": 1000, "points_of_interest": [123, 456]}`
-
-Note that radiuses only work when combined with a named place, zip code, or custom shape.
-
-#### Attribute condition
-
-An *attribute condition* is generally one element of a JSON object listing several household criteria. Each such element must conform to the format appropriate for the [household attribute](#list-household-attributes) in question:
-
-* **Continuously variabled attributes** are specified with a range: `"household_income": [80000, 120000]`. For unbounded ranges, use `"-Infinity"` (no minimum) and `"Infinity"` (no maximum). To specifically look for null values (no coverage), use `"NULL"`.
-
-* **Boolean attributes**: `"gardener": false`. To specifically look for null values (no coverage), use `"NULL"`; if non-truthy, `"FALSE_OR_NULL"`.
-
-* **Categorical attributes** are specified with an array of valid desired categories: `"house_style": ["Ranch", "Townhouse"]`. Households must belong to *one* of the listed categories to meet the condition. To specifically look for null values (no coverage), use `"NULL"`.
+Some endpoints allow you to indicate one or more FIG attributes (e.g. appending in the individuals endpoint). Please contact your Customer Success Manager for a data dictionary.
 
 ### Responses
 
-All responses will arrive as JSON. Your requests should include the `Accept: application/json` header to acknowledge this.
+All responses will arrive as JSON.
 
 ## Requests
 
-### V1 API
+The v3 API currently supports the following requests:
 
-* [Record a customer](#record-a-customer)
-* [Record a lead](#record-a-lead)
-* [Record a prospect](#record-a-prospect)
+* [Individuals](#individuals)
 
-### Record a customer
+### Individuals
 
-A *customer* is a household that has purchased your product or service, whether or not as a result of Faraday-facilitated outreach. Reporting your customers to Faraday improves predictions and allows you to visualize and target your customers with the platform.
+The Individuals endpoint allows users to query Faraday regarding a single individual, including scoring that individual against one or more Outcomes, determining that individuals membership in one or more segments, and appending data for that individual.
 
-#### Request
+* [Endpoint](#endpoint)
+* [Response codes](#response-codes)
+* [Request paramenters](#request-parameters)
+  * [Auth](#auth)
+  * [Identity](#identity)
+  * [Matching settings](#matching-settings)
+  * [Operations](#operations)
+  * [Response settings](#response-settings)
+  * [Response](#response)
 
-```http
-POST https://api.faraday.io/v1/customers
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
+#### Endpoint
 
-#### Parameters
+`POST /individuals`
 
-Required parameters in **bold**.
+#### Response codes
 
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-`person` | *String* | The combined first and last name of the customer. | `Michael Faraday`
-**`house_number_and_street`** | *String* | The physical address of the customer. | `123 Main St.`
-`city` | *String* | The customer's city. | `Burlington`
-`state` | *String* | The 2-letter postal abbreviation of the customer's state. | `VT`
-**`postcode`** | *String* | The customer's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-`became_customer_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the purchase was made. Uses the current time if missing. | `20151025T223451Z`
-`attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the customer—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
-`qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this customer by determining its inclusion in the specified segment, if the customer can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
+* **200** OK
+* **404** Individual could not be found
 
-#### Response
+#### Request parameters
 
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
-`customer_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly submitted customer. | `4a991134-2677-46c5-b01e-298582982fa0`
-`household_id` | The internal Faraday ID (UUID) for the known household that the customer matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
-`person` | Null unless provided in request. The name of record for the known household your customer matched to, if such a match could be made. | `Michael Faraday`
-`attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
-`disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `[{"household_income": "expected between 50000.0 and Infinity, but outside"}]`
+##### Auth
 
-### Record a lead
+  * `api_key` _String_ **Required** — The API key for the Account within which this request should be made.
 
-In Faraday parlance, a *lead* is a household that has expressed interest in your product or service, often by *responding* to marketing—whether or not the campaign was facilitated by Faraday.
+##### Identity
 
-#### Request
+  * `person_first_name` _String_ — First name (if known).
+  * `person_last_name` _String_ — Last name (if known).
+  * `house_number_and_street` _String_ — Physical address including number and street.
+  * `city` _String_ — City.
+  * `state` _String_ — 2-letter postal abbreviation.
+  * `postcode` _String_ — 5-digit zipcode. Send as string to preserve leading zeroes.
+  * `phone` _String_ — E.123-compliant string representation.
+  * `email` _String_ — E-mail address.
 
-```http
-POST https://api.faraday.io/v1/leads
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
+##### Matching settings
 
-#### Parameters
+  * `allow_email_match` _"true" or omit_ — Allow Faraday to attempt an email match if matching by physical address fails. **You may incur charges.**
+  * `allow_phone_match` _"true" or omit_ — Allow Faraday to attempt a phone match if matching by physical address fails. **You may incur charges.**
+  * `match_tolerance` _"loose", "tight", or omit_ — By default, Faraday will match a given identity when lastname, normalized address, and postcode match. Tight mode, on the other hand, also requires a firstname match. Choose loose mode to ignore name and match on address only.
 
-Required parameters in **bold**.
+##### Operations
 
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-`person` | *String* | The combined first and last name of the lead. | `Michael Faraday`
-**`house_number_and_street`** | *String* | The physical address of the lead. | `123 Main St.`
-`city` | *String* | The lead's city. | `Burlington`
-`state` | *String* | The 2-letter postal abbreviation of the lead's state. | `VT`
-**`postcode`** | *String* | The lead's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-**`became_lead_at`** | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the lead emerged. Uses the current time if missing. | `20151025T223451Z`
-`attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the lead—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#list-household-attributes); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
-`qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this lead by determining its inclusion in the specified segment, if the lead can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
+  * `audiences` _Array of Audiences_ — Check to see if the matched household falls within each of the specified Audiences. Each specified Audience must have been previously created with Explore.
+  * `attributes` _Array of Strings_ — Append the specified FIG attributes, each identified by its handle.
+  * `outcomes` _Array of UUID Strings_ — Use each specified Outcome's currently promoted Model to score the matching household.
+
+##### Response settings
+  * `response_prefix` _String_ — Prefix each standard response key with the specified string.
+  * `postback_url` _String_ — In addition to the standard HTTP response, also POST the response to the specified URL.
 
 #### Response
 
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for your newly submitted lead. | `4a991134-2677-46c5-b01e-298582982fa0`
-`lead_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly submitted lead. | `4a991134-2677-46c5-b01e-298582982fa0`
-`household_id` | The internal Faraday ID (UUID) for the known household that the lead matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
-`person` | Null unless provided in request. The name of record for the known household your lead matched to, if such a match could be made. | `Michael Faraday`
-`attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
-`disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
+  * `person_first_name` _String_ — Passed through from request.
+  * `person_last_name` _String_ — Passed through from request.
+  * `house_number_and_street` _String_ — Normalized from request.
+  * `city` _String_ — Normalized from request.
+  * `state` _String_ — Normalized from request.
+  * `postcode` _String_ — Normalized from request.
+  * `latitude` _Float_ — Decimal geocoded latitude.
+  * `longitude` _Float_ — Decimal geocoded longitude.
+  * `match_code` _String_ — For internal troubleshooting purposes.
+  * `attributes` _Hash_ — Each key is the handle of a requested FIG attribute. Each corresponding value is that attribute extracted from FIG.
+  * `audiences` _Hash_ — Each key is the UUID of a requested Audience. Each corresponding value is a boolean indicating whether the household does or does not belong to that Audience.
+  * `outcomes` _Hash_ — Each key is the ID of an Outcome this household was scored against. The corresponding value is the probability that the matched household will achieve this Outcome.
+  * `warnings` _Array of Strings_ — Each warning is a human-interpretable message indicating an issue with the API request.
+  * `error` _String_ — Error message.
 
-### Record a prospect
+## Copyright
 
-In Faraday parlance, a *prospect* is a household that has been contacted (or will shortly be contacted) but where an outcome is not yet known.
-
-#### Request
-
-```http
-POST https://api.faraday.io/v1/prospects
-Authorization: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
-Content-Type: application/json
-Accept: application/json
-```
-
-#### Parameters
-
-Required parameters in **bold**.
-
-Parameter | Type | Description | Example
-----------|------|-------------|--------
-`person` | *String* | The combined first and last name of the prospect. | `Michael Faraday`
-**`house_number_and_street`** | *String* | The physical address of the prospect. | `123 Main St.`
-`city` | *String* | The prospect's city. | `Burlington`
-`state` | *String* | The 2-letter postal abbreviation of the prospect's state. | `VT`
-**`postcode`** | *String* | The prospect's 5-digit zip code. (Use a string to avoid issues with leading zeroes.) | `05402`
-`became_prospect_at` | *String* | A [ISO8601](https://en.wikipedia.org/wiki/ISO_8601) date/time string indicating when the prospect emerged. Uses the current time if missing. | `20151025T223451Z`
-`attributes` | *String* or *Array of strings* | Instructs Faraday to include (append) one or more attributes of the prospect—if a match to a known household can be made. Each attribute should be a [valid Faraday household attribute](#options-households); unrecognized attributes will be ignored and added to the `Faraday-Unrecognized-Attributes` response header. | `["household_income", "credit_rating"]`
-`qualify` | [*Segment specification*](#segment-specification) | Instruct Faraday to qualify this prospect by determining its inclusion in the specified segment, if the prospect can be matched with high confidence to a known Faraday household. | `{ "geography": [ { "type": "place", "id": 1234 } ], "criteria": { "household_income": [80000, "Infinity"]} }`
-
-#### Response
-
-Top-level key | Value description | Example
---------------|-------------------|--------
-`id` | The internal Faraday ID (UUID) for your newly submitted prospect. | `4a991134-2677-46c5-b01e-298582982fa0`
-`prospect_id` | (DEPRECATED; see `id`) The internal Faraday ID (UUID) for your newly submitted prospect. | `4a991134-2677-46c5-b01e-298582982fa0`
-`household_id` | The internal Faraday ID (UUID) for the known household that the prospect matched to (if a match could be made). Note that Faraday household IDs are ephemeral and should be neither persisted nor relied upon; we include them for debugging purposes. | `2e231a5a-e3f7-4a09-b4fc-21289f7debcf`
-`person` | Null unless provided in request. The name of record for the known household your prospect matched to, if such a match could be made. | `Michael Faraday`
-`attributes` | Requested household-level attributes, if any were provided and a match could be made. | `{ "household_income": 110000, "credit_rating": 690 }`
-`qualify` | A boolean indicating whether the matched household (if any) is included in the segment specified in your request (if provided). | `true`
-`disqualifications` | The reason for a false value in the `qualify` response value. Only included when `qualify` is false. | `"household_income: expected between 50000 and Infinity, but outside"`
+Copyright 2018 Faraday
