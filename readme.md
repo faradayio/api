@@ -1,17 +1,16 @@
 ## API documentation
 
-**Base URL:** `https://api.faraday.io/v3`
+**Base URL:** `https://api.faraday.io`
 
 ### Households: data append and segment membership
 
 #### Endpoint
 
-`POST /households`
+`POST /v3/households`
 
 #### Response codes
 
 * **200** OK
-* **404** Household could not be found
 
 #### Request parameters
 
@@ -47,6 +46,7 @@
 
 #### Response
 
+  * `email` _String_ — Passed through from request.
   * `person_first_name` _String_ — Passed through from request.
   * `person_last_name` _String_ — Passed through from request.
   * `house_number_and_street` _String_ — Normalized from request.
@@ -65,12 +65,11 @@
 
 #### Endpoint
 
-`POST /scores`
+`POST /v3/scores`
 
 #### Response codes
 
 * **200** OK
-* **422** Household could not be found
 
 #### Request parameters
 
@@ -107,6 +106,7 @@
 
 #### Response
 
+  * `email` _String_ — Passed through from request.
   * `person_first_name` _String_ — Passed through from request.
   * `person_last_name` _String_ — Passed through from request.
   * `house_number_and_street` _String_ — Normalized from request.
@@ -122,4 +122,4 @@
 
 ## Copyright
 
-Copyright 2018 Faraday
+Copyright 2019 Faraday
