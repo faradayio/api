@@ -134,6 +134,25 @@ You can also put the API key in the parameters as `api_key` if that's easier.
   * `error` _String_ — Error message.
   * `email` _String_ — Passed through from request.
 
+### Match codes
+
+All endpoints return a `match_code` of the form `oFLX`. Each letter stands for something.
+
+  * `F` — first name used
+  * `L` — last name used
+  * `P` — full name used
+  * `N` — nickname used (e.g. Bill matching to William)
+  * `E` — exact address used
+  * `X` — address prefix used (e.g., 123 N Blount St matching to 123 N Blount St Apt 403... it's a prefix)
+
+The letters `i` (tight), `o` (default), and `a` (loose) refer to the match algorithm, but this can be seen more easily from the `match_algorithm` return value.
+
+Examples:
+
+  * `oP-E` — Default mode full name exact address match. "Seamus Abshere 1038 E Dayton St" matched "Shamus Abshere 1038 E Dayton St".
+  * `oFLX` — Default mode first and last name address prefix match. "Devin/Abshere 123 N Blount St" matched to "Devon/Abshere 123 N Blount Apt 403".
+  * `a-LX` — Loose mode last-name only prefix match. "Seamus Abshere 123 N Blount St" matched to "Devin Abshere 123 N Blount Apt 403".
+
 ## Copyright
 
 Copyright 2019 Faraday
