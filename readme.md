@@ -111,6 +111,8 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
   * `outcome_id` _UUID String_ — Use the specified Outcome's currently promoted Model to score the matching household.
   * `campaign_id` _UUID String_ **Deprecated** — Use the specified Campaign's currently promoted Model to score the matching household.
+  * `audiences` _Array of UUID Strings_ — Check to see if the matched household falls within each of the specified Audiences. Each specified Audience must have been previously created with Explore.
+  * `attributes` _Array of Strings_ — Append the specified FIG attributes, each identified by its handle.
 
 ##### Response settings
 
@@ -129,6 +131,8 @@ You can also put the API key in the parameters as `api_key` if that's easier.
   * `longitude` _Float_ — Decimal geocoded longitude.
   * `match_algorithm` _"loose", "tight", or omit_ — Passed through from request.
   * `match_code` _String_ — Match code.
+  * `attributes` _Hash_ — Each key is the handle of a requested FIG attribute. Each corresponding value is that attribute extracted from FIG.
+  * `audiences` _Hash_ — Each key is the UUID of a requested Audience. Each corresponding value is a boolean indicating whether the household does or does not belong to that Audience.
   * `score` _Float_ — The probability that the matched household will achieve the indicated Outcome/Campaign.
   * `warnings` _Array of Strings_ — Each warning is a human-interpretable message indicating an issue with the API request.
   * `error` _String_ — Error message.
