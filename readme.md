@@ -53,6 +53,8 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 #### Response
 
+  * `persona_name` _String_ — Name of the persona that individual belongs to.
+  * `persona_id` _String_ — ID of the persona that individual belongs to.
   * `person_first_name` _String_ — Passed through from request.
   * `person_last_name` _String_ — Passed through from request.
   * `house_number_and_street` _String_ — Normalized from request.
@@ -121,6 +123,8 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 #### Response
 
+  * `persona_name` _String_ — Name of the persona that individual belongs to.
+  * `persona_id` _String_ — ID of the persona that individual belongs to.
   * `person_first_name` _String_ — Passed through from request.
   * `person_last_name` _String_ — Passed through from request.
   * `house_number_and_street` _String_ — Normalized from request.
