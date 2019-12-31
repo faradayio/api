@@ -48,8 +48,19 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 ##### Response settings
 
+Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for posting to Hubspot. In order to post to Hubspot, we require both a `vid` and a configuration of fields to post.
+
   * `prefix` _String_ — Prefix each standard response key with the specified string.
   * `postback_url` _String_ — In addition to the standard HTTP response, also POST the response to the specified URL.
+  * `hubspot` _Object_ — A mapping of `fdy_field_name` to `hubspot_field_name`. For example:
+    ```js
+      {
+        'persona_name': 'hb_persona_name',
+        'persona_id': 'hb_persona_id',
+        'house_number_and_street': 'hb_house_num'
+      }
+    ```
+  * `vid` _String_ — ID of the hubspot customer to update with fields in `hubspot` object
 
 #### Response
 
@@ -118,8 +129,19 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 ##### Response settings
 
+Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for posting to Hubspot. In order to post to Hubspot, we require both a `vid` and a configuration of fields to post.
+
   * `prefix` _String_ — Prefix each standard response key with the specified string.
   * `postback_url` _String_ — In addition to the standard HTTP response, also POST the response to the specified URL.
+  * `hubspot` _Object_ — A mapping of `fdy_field_name` to `hubspot_field_name`. For example:
+    ```js
+      {
+        'persona_name': 'hb_persona_name',
+        'persona_id': 'hb_persona_id',
+        'house_number_and_street': 'hb_house_num'
+      }
+    ```
+  * `vid` _String_ — ID of the hubspot customer to update with fields in `hubspot` object
 
 #### Response
 
