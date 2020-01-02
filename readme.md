@@ -60,7 +60,7 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
         'house_number_and_street': 'hb_house_num'
       }
     ```
-  * `vid` _String_ — ID of the hubspot customer to update with fields in `hubspot` object
+  * `vid` _String_ — ID of the hubspot customer to update with fields in `hubspot` object. The Hubspot webhook provides this automatically.
 
 #### Response
 
@@ -141,7 +141,8 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
         'house_number_and_street': 'hb_house_num'
       }
     ```
-  * `vid` _String_ — ID of the hubspot customer to update with fields in `hubspot` object
+  * `vid` _String_ — ID of the hubspot customer to update with fields in `hubspot` object. The Hubspot webhook provides this automatically.
+
 
 #### Response
 
