@@ -64,8 +64,8 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
 
 #### Response
 
-  * `persona_name` _String_ — Name of the persona that individual belongs to.
-  * `persona_id` _String_ — ID of the persona that individual belongs to.
+  * `persona_name` _String_ — Name of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
+  * `persona_id` _String_ — ID of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
   * `person_first_name` _String_ — Passed through from request.
   * `person_last_name` _String_ — Passed through from request.
   * `house_number_and_street` _String_ — Normalized from request.
@@ -146,8 +146,8 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
 
 #### Response
 
-  * `persona_name` _String_ — Name of the persona that individual belongs to.
-  * `persona_id` _String_ — ID of the persona that individual belongs to.
+  * `persona_name` _String_ — Name of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
+  * `persona_id` _String_ — ID of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
   * `person_first_name` _String_ — Passed through from request.
   * `person_last_name` _String_ — Passed through from request.
   * `house_number_and_street` _String_ — Normalized from request.
