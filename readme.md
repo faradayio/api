@@ -1,10 +1,8 @@
 ## API documentation
 
-**Base URL:** `https://api.faraday.io/`
+**Base URL:** `https://api.faraday.ai/`
 
 ### Households: scoring, persona assignment, data append, and segment membership
-
-Note: The Faraday API has recently deprecated all endpoints except `/v3/households`. It now accepts an `outcome_id` or `campaign_id` (deprecated) parameter so that scores can be shown. In other words, `/v3/households` is the only recommended endpoint for new projects.
 
 #### Endpoint
 
@@ -39,17 +37,19 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 ##### Matching settings
 
-- `allow_reverse_email` _"true" or omit_ — Allow Faraday to attempt an email match if matching by physical address fails. **You may incur charges.**
-- `allow_reverse_phone` _"true" or omit_ — Allow Faraday to attempt a phone match if matching by physical address fails. **You may incur charges.**
 - `match_algorithm` _"loose", "tight", or omit_ — By default, Faraday will match a given identity when lastname, normalized address, and postcode match. Tight mode, on the other hand, also requires a firstname match. Choose loose mode to ignore name and match on address only.
+- `allow_reverse_email` _"true" or omit_ **Deprecated** — Ignored. Reverse email is always attempted if email provided.
+- `allow_reverse_phone` _"true" or omit_ **Deprecated** — Ignored. Reverse phone is an account-level setting that cannot be changed for individual lookups.
 
 ##### Operations
 
-- `outcome_id` _UUID String_ — Use the specified Outcome's currently promoted Model to score the matching household.
-- `outcome_ids` _Array of UUIDs_ — Use the specified Outcomes' currently promoted Models to score the matching household.
-- `campaign_id` _UUID String_ **Deprecated** — Use the specified Campaign's currently promoted Model to score the matching household.
-- `audiences` _Array of UUID Strings_ — Check to see if the matched household falls within each of the specified Audiences. Each specified Audience must have been previously created with Explore.
-- `attributes` _Array of Strings_ — Append the specified FIG attributes, each identified by its handle.
+- `outcome_ids` _Array of UUIDs_ — Use the specified Outcomes to score the matching household.
+- `persona_set_ids` _Array of UUIDs_ — Use the specified Persona Sets to assess the matching household.
+- `outcome_id` _UUID String_ **Deprecated**— Use the specified Outcome to score the matching household. Use `outcome_ids` instead.
+- `persona_set_id` _UUID String_ **Deprecated**— Use the specified Persona Set to score the matching household. Use `persona_set_ids` instead.
+- `campaign_id` _UUID String_ **Deprecated** — Use the specified Campaigns to score the matching household.
+- `audiences` _Array of UUID Strings_ **Deprecated** — Check to see if the matched household falls within each of the specified Audiences. Each specified Audience must have been previously created with Explore.
+- `attributes` _Array of Strings_ **Deprecated** — Append the specified FIG attributes, each identified by its handle.
 
 ##### Response settings
 
@@ -69,6 +69,8 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
 
 #### Response
 
+##### Elements
+
 - `attributes` _Object_ — Each key is the handle of a requested FIG attribute. Each corresponding value is that attribute extracted from FIG.
 - `audiences` _Object_ — Each key is the UUID of a requested Audience. Each corresponding value is a boolean indicating whether the household does or does not belong to that Audience.
 - `city` _String_ — Normalized from request.
@@ -81,15 +83,21 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
 - `match_code` _String_ — Match code.
 - `person_first_name` _String_ — Passed through from request.
 - `person_last_name` _String_ — Passed through from request.
-- `persona_id` _String_ — ID of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
-- `persona_name` _String_ — Name of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
 - `postcode` _String_ — Normalized from request.
-- `score` _Float_ — The probability that the matched household will achieve the indicated Outcome/Campaign.
-- `score_percentile` _Float_ — Score percentile within the cross-validation dataset (if available).
+- `state` _String_ — Normalized from request.
+- `persona_sets` _Object_ - Each key is a Persona Set ID. Each corresponding value is an Object containing a Persona ID and a Persona Name.
 - `scores` _Object_ — Each key is an Outcome ID. Each corresponding value is the score.
 - `score_percentiles` _Object_ — Each key is an Outcome ID. Each corresponding value is the score percentile (if available).
-- `state` _String_ — Normalized from request.
 - `warnings` _Array of Strings_ — Each warning is a human-interpretable message indicating an issue with the API request.
+
+#### Deprecated elements
+
+Still supported.
+
+- `persona_id` _String_ — ID of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
+- `persona_name` _String_ — Name of the persona that individual belongs to. Requires personas. Talk to your CSM if this is not in the response.
+- `score` _Float_ — The probability that the matched household will achieve the indicated Outcome/Campaign.
+- `score_percentile` _Float_ — Score percentile within the cross-validation dataset (if available).
 
 ### Scores
 
@@ -120,4 +128,4 @@ Examples:
 
 ## Copyright
 
-Copyright 2022 Faraday
+Copyright 2023 Faraday
