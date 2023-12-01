@@ -11,7 +11,7 @@ The [Faraday API](https://faraday.ai/developers/reference) (knowable by prefix `
 <table>
 <tr>
 <th>Feature</th>
-<th>Faraday API (v1)</th>
+<th><a href="https://faraday.ai/developers/reference">Faraday API (v1)</a></th>
 <th>Legacy Faraday Inform API (v3) - this document</th>
 </tr>
 <tr>
