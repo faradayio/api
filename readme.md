@@ -1,4 +1,4 @@
-## Faraday Inform API (legacy)
+## Faraday Inform API (v3) - legacy read-only API
 
 **Base URL:** `https://api.faraday.ai/v3`
 
