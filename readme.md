@@ -11,8 +11,8 @@ The [Faraday API](https://faraday.ai/developers/reference) (knowable by prefix `
 <table>
 <tr>
 <th>Feature</th>
-<th>Faraday Inform API (v3)</th>
 <th>Faraday API (v1)</th>
+<th>Legacy Faraday Inform API (v3) - this document</th>
 </tr>
 <tr>
 <td>Configure Faraday resources</td>
@@ -23,6 +23,11 @@ The [Faraday API](https://faraday.ai/developers/reference) (knowable by prefix `
 <td>Read predictions up to 100/second</td>
 <td>✅</td>
 <td></td>
+</tr>
+<tr>
+<td>Read predictions up to 5/second</td>
+<td></td>
+<td>✅</td>
 </tr>
 <tr>
 <td>Get probability in addition to percentile</td>
