@@ -104,7 +104,7 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for posting to Hubspot. In order to post to Hubspot, we require both a `vid` and a configuration of fields to post.
 
-- `include_average_conversion_rates` **Boolean** — Enable returning average conversion rates.
+- `include_average_conversion_rates` _Boolean_ — Enable returning average conversion rates.
 - `prefix` _String_ — Prefix each standard response key with the specified string.
 - `postback_url` _String_ — In addition to the standard HTTP response, also POST the response to the specified URL.
 - `hubspot` _Object_ — A mapping of `fdy_field_name` to `hubspot_field_name`. For example:
