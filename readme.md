@@ -25,14 +25,19 @@ The [Faraday API](https://faraday.ai/developers/reference) (knowable by prefix `
 <td></td>
 </tr>
 <tr>
-<td>Read predictions up to 5/second</td>
-<td></td>
-<td>✅</td>
-</tr>
-<tr>
 <td>Get probability in addition to percentile</td>
 <td>✅</td>
 <td></td>
+</tr>
+<tr>
+<td>Get metadata about Faraday resources</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Read predictions up to 5/second</td>
+<td></td>
+<td>✅</td>
 </tr>
 <tr>
 <td><a href="https://docs.google.com/document/d/1nThkUeqJROPjJEs8E9zy4vnzRajLQIV66SiHmujT-z0/edit#heading=h.7k6rycn881a">Faraday Salesforce Lightning Connector</a></td>
