@@ -1,6 +1,45 @@
-## API documentation
+## Faraday Inform API (legacy)
 
-**Base URL:** `https://api.faraday.ai/`
+**Base URL:** `https://api.faraday.ai/v3`
+
+## Difference between Faraday Inform API (v3) and Faraday API (v1)
+
+This document refers to the Faraday Inform API (knowable by prefix `v3`), a read-only legacy product with a maximum rate of 5 calls per second per API token.
+
+The [Faraday API](https://faraday.ai/developers/reference) (knowable by prefix `v1` even though it is more modern) is a different product with different capabilities.
+
+<table>
+<tr>
+<th>Feature</th>
+<th>Faraday Inform API (v3)</th>
+<th>Faraday API (v1)</th>
+</tr>
+<tr>
+<td>Configure Faraday resources</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Read predictions up to 100/second</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td>Get probability in addition to percentile</td>
+<td>✅</td>
+<td></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1nThkUeqJROPjJEs8E9zy4vnzRajLQIV66SiHmujT-z0/edit#heading=h.7k6rycn881a">Faraday Salesforce Lightning Connector</a></td>
+<td></td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Return average conversion rates per Outcome</td>
+<td></td>
+<td>✅</td>
+</tr>
+</table>
 
 ### Households: scoring, persona assignment, data append, and segment membership
 
@@ -55,6 +94,7 @@ You can also put the API key in the parameters as `api_key` if that's easier.
 
 Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for posting to Hubspot. In order to post to Hubspot, we require both a `vid` and a configuration of fields to post.
 
+- `include_average_conversion_rates` **Boolean** — Enable returning average conversion rates.
 - `prefix` _String_ — Prefix each standard response key with the specified string.
 - `postback_url` _String_ — In addition to the standard HTTP response, also POST the response to the specified URL.
 - `hubspot` _Object_ — A mapping of `fdy_field_name` to `hubspot_field_name`. For example:
@@ -89,6 +129,7 @@ Callers can specify a `prefix` and/or `postback_url`, _or_ a configuration for p
 - `scores` _Object_ — Each key is an Outcome ID. Each corresponding value is the score.
 - `score_percentiles` _Object_ — Each key is an Outcome ID. Each corresponding value is the score percentile (if available).
 - `warnings` _Array of Strings_ — Each warning is a human-interpretable message indicating an issue with the API request.
+- `average_conversion_rates` _Object_ — Each key is an Outcome ID. Each corresponding value is its average conversion rate (if available). `include_average_conversion_rates` must be set to true.
 
 #### Deprecated elements
 
